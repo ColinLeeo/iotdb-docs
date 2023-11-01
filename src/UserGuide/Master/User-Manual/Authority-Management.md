@@ -23,7 +23,7 @@
 
 IoTDB provides permission management operations, offering users the ability to manage permissions for data and cluster systems, ensuring data and system security. 
 
-This article introduces the basic concepts of the permission module in IoTDB, including user definition, permission management, authentication logic, and use cases. For detailed SQL statements and usage, please refer to the [Data Model and Concepts section](https://chat.openai.com/Basic-Concept/Data-Model-and-Terminology.md). In the JAVA programming environment, you can use the [JDBC API](https://chat.openai.com/API/Programming-JDBC.md) to execute permission management statements individually or in batches. 
+This article introduces the basic concepts of the permission module in IoTDB, including user definition, permission management, authentication logic, and use cases. In the JAVA programming environment, you can use the [JDBC API](https://chat.openai.com/API/Programming-JDBC.md) to execute permission management statements individually or in batches. 
 
 ## Basic Concepts
 
@@ -79,12 +79,12 @@ The table below describes the types and scope of these permissions:
 
 
 
-| Permission Name | Permission Scope                                             | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| --------------- | ------------------------------------------------------------ |-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| READ_DATA       | - select data                                                | Allows reading time series data under the authorized path.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| WRITE_DATA      | - All permissions included in READ_DATA<br>- insert/delete data<br/>- Load tsfile/import csv<br/> | Allows reading time series data under the authorized path.<br/>Allows inserting and deleting time series data under the authorized path.<br/>Allows importing and loading data under the authorized path. When importing data, you need the WRITE_DATA permission for the corresponding path. When automatically creating  databases or time series, you need MANAGE_DATABASE and WRITE_SCHEMA permissions.                                                                                                                                                                                                           |
-| READ_SCHEMA     | - show/count database<br/>- show/count child path<br/>- show/count child node<br/>- show/count device<br/>- show/count timeseries<br/>- show template<br/>- show view<br/>- show ttl | Allows obtaining detailed information about the metadata tree under the authorized path, <br/>including databases, child paths, child nodes, devices, time series, templates, views, etc.                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| WRITE_SCHEMA    | - All permissions included in READ_SCHEMA<br/>- create/delete/alter timeseries<br/>- create/set/unset/drop template<br/>- create/alter/delete view<br/>- set ttl, unset ttl | Allows obtaining detailed information about the metadata tree under the authorized path.<br/>Allows creating, deleting, and modifying time series, templates, views, etc. under the authorized path. When creating or modifying views, it checks the WRITE_SCHEMA permission for the view path and READ_SCHEMA permission for the data source. When querying and inserting data into views, it checks the READ_DATA and WRITE_DATA permissions for the view path.</br> Allows setting, unsetting, and viewing TTL under the authorized path. <br/> Allows attaching or detaching templates under the authorized path. |
+| Permission Name | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| --------------- |-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| READ_DATA       | Allows reading time series data under the authorized path.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| WRITE_DATA      | Allows reading time series data under the authorized path.<br/>Allows inserting and deleting time series data under the authorized path.<br/>Allows importing and loading data under the authorized path. When importing data, you need the WRITE_DATA permission for the corresponding path. When automatically creating  databases or time series, you need MANAGE_DATABASE and WRITE_SCHEMA permissions.                                                                                                                                                                                                           |
+| READ_SCHEMA     | Allows obtaining detailed information about the metadata tree under the authorized path, <br/>including databases, child paths, child nodes, devices, time series, templates, views, etc.                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| WRITE_SCHEMA    | Allows obtaining detailed information about the metadata tree under the authorized path.<br/>Allows creating, deleting, and modifying time series, templates, views, etc. under the authorized path. When creating or modifying views, it checks the WRITE_SCHEMA permission for the view path and READ_SCHEMA permission for the data source. When querying and inserting data into views, it checks the READ_DATA and WRITE_DATA permissions for the view path.</br> Allows setting, unsetting, and viewing TTL under the authorized path. <br/> Allows attaching or detaching templates under the authorized path. |
 
 
 ### Global Permissions
@@ -93,19 +93,18 @@ Global permissions constrain the database functions that users can use and restr
 The table below describes the types of system permissions: 
 
 
-| Permission Name | Permission Scope                                             | Description                                                                                                                                                                                                                                                        |
-|:---------------:| :----------------------------------------------------------- |--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| MANAGE_DATABASE | - create/delete database                                     | Allow users to create and delete databases.                                                                                                                                                                                                                        |
-|   MANAGE_USER   | - create/delete/alter/list user                              | Allow users to create, delete, modify, and view users.                                                                                                                                                                                                             |
-|   MANAGE_ROLE   | - create/delete/list role<br/>- grant/revoke role to/from user | Allow users to create, delete, modify, and view roles. <br/>Allow users to grant/revoke roles to/from other users.                                                                                                                                                 |
-|   USE_TRIGGER   | - create/drop/show trigger                                   | Allow users to create, delete, and view triggers.<br/>Independent of data source permission checks for triggers.                                                                                                                                                   |
-|     USE_UDF     | - create/drop/show function                                  | Allow users to create, delete, and view user-defined functions. <br/> Independent of data source permission checks for user-defined functions.                                                                                                                     |
-|     USE_CQ      | - create/drop/show continuous queries                        | Allow users to create, delete, and view continuous queries. <br/> Independent of data source permission checks for continuous queries.                                                                                                                             |
-|    USE_PIPE     | - create/start/stop/drop/show pipe<br/>- create/drop/show pipeplugin | Allow users to create, start, stop, delete, and view pipelines. <br/>Allow users to create, delete, and view pipeline plugins. <br/>Independent of data source permission checks for pipelines.                                                                    |
-| EXTEND_TEMPLATE | - extend schema template                                     | Permission to automatically create templates.                                                                                                                                                                                                                      |
-|    MAINTAIN     | -  kill query <br/>- show queries<br/>- show variables<br/>- show cluster (details) | Allow users to query and cancel queries. <br/>Allow users to view variables. <br/>Allow users to view cluster status.                                                                                                                                              |
-|  -（ROOT ONLY）   | - flush<br/>- merge<br/>- clear cache<br/>- set system to readonly/running<br/>- create/drop/alter schema template | Only for admin.<br/>Operational management permissions for the cluster. <br/>Creation, deletion, modification, mounting, and unmounting of metadata templates. <br/>These operations can only be performed by administrators and cannot be granted to other users. |
-
+| Permission Name | Description                                                                                                                                                                                     |
+|:---------------:|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| MANAGE_DATABASE | Allow users to create and delete databases.                                                                                                                                                     |
+|   MANAGE_USER   | Allow users to create, delete, modify, and view users.                                                                                                                                          |
+|   MANAGE_ROLE   | Allow users to create, delete, modify, and view roles. <br/>Allow users to grant/revoke roles to/from other users.                                                                              |
+|   USE_TRIGGER   | Allow users to create, delete, and view triggers.<br/>Independent of data source permission checks for triggers.                                                                                |
+|     USE_UDF     | Allow users to create, delete, and view user-defined functions. <br/> Independent of data source permission checks for user-defined functions.                                                  |
+|     USE_CQ      | Allow users to create, delete, and view continuous queries. <br/> Independent of data source permission checks for continuous queries.                                                          |
+|    USE_PIPE     | Allow users to create, start, stop, delete, and view pipelines. <br/>Allow users to create, delete, and view pipeline plugins. <br/>Independent of data source permission checks for pipelines. |
+| EXTEND_TEMPLATE | Permission to automatically create templates.                                                                                                                                                   |
+|    MAINTAIN     | Allow users to query and cancel queries. <br/>Allow users to view variables. <br/>Allow users to view cluster status.                                                                           |
+|    USE_MODEL    | Allow users to use Machine learning model                                                                                                                                                       |
 Regarding template permissions:
 
 1. Only administrators are allowed to create, delete, modify, query, mount, and unmount templates.
@@ -156,11 +155,11 @@ When performing authorization for multiple paths, such as executing a multi-path
 
 IoTDB provides composite permissions for user authorization:
 
-| Permission Name | Permission Scope                                             |
-| --------------- | ------------------------------------------------------------ |
-| ALL             | All permissions (except for permissions exclusive to the administrator user) |
-| READ            | READ_SCHEMA, READ_DATA                                       |
-| WRITE           | WRITE_SCHEMA, WRITE_DATA                                     |
+| Permission Name | Permission Scope         |
+|-----------------|--------------------------|
+| ALL             | All permissions          |
+| READ            | READ_SCHEMA, READ_DATA   |
+| WRITE           | WRITE_SCHEMA, WRITE_DATA |
 
 Composite permissions are not specific permissions themselves but a shorthand way to denote a combination of permissions, with no difference from directly specifying the corresponding permission names.
 
@@ -329,7 +328,7 @@ eg: REVOKE ALL ON ROOT.** FROM USER user1;
   
   
   
-### Examples
+## Examples
 
    Based on the described [sample data](https://github.com/thulab/iotdb/files/4438687/OtherMaterial-Sample.Data.txt), IoTDB's sample data may belong to different power generation groups such as ln, sgcc, and so on. Different power generation groups do not want other groups to access their database data, so we need to implement data isolation at the group level. 
 
@@ -449,7 +448,7 @@ Before version 1.3, there were many different permission types. In 1.3 version's
 You can refer to the table below for a comparison of permission types between the old and new versions (where "--IGNORE" indicates that the new version ignores that permission):
 
 | Permission Name           | Path-Related | New Permission Name | Path-Related |
-| ------------------------- | ------------ |---------------------|--------------|
+|---------------------------|--------------|---------------------|--------------|
 | CREATE_DATABASE           | YES          | MANAGE_DATABASE     | NO           |
 | INSERT_TIMESERIES         | YES          | WRITE_DATA          | YES          |
 | UPDATE_TIMESERIES         | YES          | WRITE_DATA          | YES          |
